@@ -1,0 +1,13 @@
+{
+  "name": "choosemap-fill-patterns",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dependency-free SVG and Canvas fill patterns extracted from ChooseMap.",
+  "scripts": {
+    "test": "node --test fill-patterns.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

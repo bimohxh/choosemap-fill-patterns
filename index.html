@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ChooseMap Fill Patterns — SVG + Canvas</title>
+<style>
+body{margin:0;background:#f6f5ef;color:#193c30;font:16px/1.6 system-ui,sans-serif}main{max-width:1120px;margin:64px auto;padding:0 24px}h1{font-size:44px;letter-spacing:-1.5px;line-height:1.15;margin:12px 0}p{max-width:740px}a{color:#245c47}.eyebrow{font-size:12px;letter-spacing:2px;font-weight:700}.controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:30px 0}select,button{font:inherit;border:1px solid #b8c4ba;padding:8px 14px;border-radius:8px;background:white;color:inherit}button{background:#245c47;color:white;cursor:pointer}.previews{display:grid;grid-template-columns:1fr 1fr;gap:24px}figure{margin:0;padding:16px;background:white;border:1px solid #d7ddd3;border-radius:12px}figcaption{font-weight:600;margin-bottom:14px}svg,canvas{display:block;width:100%;height:auto;background:#f8faf6}.hint{font-size:14px;color:#52665c}footer{margin-top:32px}@media(max-width:760px){.previews{grid-template-columns:1fr}h1{font-size:34px}}
+</style><main><div class="eyebrow">CHOOSEMAP / DEVELOPER EXAMPLE</div><h1>One pattern. Two renderers.</h1><p>Use the same vector definition for a Canvas preview and an editable SVG export. Try dots, rings, and hatching on the synthetic shapes below.</p>
+<div class="controls"><label>Pattern <select id="style"></select></label><label>Color <input id="color" type="color" value="#245c47"></label><button id="download" type="button">Download SVG</button></div>
+<div class="previews"><figure><figcaption>Editable SVG</figcaption><div id="vector"></div></figure><figure><figcaption>Canvas preview</figcaption><canvas id="canvas" width="640" height="400" aria-label="Canvas showing the selected fill pattern on synthetic regions"></canvas></figure></div>
+<p class="hint">Synthetic shapes, not geographic boundaries. Zero runtime dependencies; all rendering happens in your browser.</p><footer>Extracted from <a href="https://choosemap.com/">ChooseMap</a> · <a href="https://choosemap.com/studio/">Open map Studio</a></footer></main>
+<script type="module">
+import {FILL_STYLES,fillPatternSpec,patternSvg,drawFillPattern} from './fill-patterns.js';
+const style=document.querySelector('#style'), color=document.querySelector('#color'), vector=document.querySelector('#vector'), canvas=document.querySelector('#canvas'), ctx=canvas.getContext('2d');
+const shapes=['M72 85L225 52L295 132L246 249L109 282L51 192Z','M326 95L492 61L587 164L525 278L358 310L288 224Z'];
+for(const item of FILL_STYLES){const option=document.createElement('option');option.value=item.id;option.textContent=item.label;style.append(option);}style.value='hatch';
+let currentSvg='';
+function render(){
+ const spec=fillPatternSpec(style.value,color.value,640,400);
+ const fill=spec?'url(#preview-pattern)':color.value;
+ currentSvg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-label="Patterned synthetic regions"><defs>${patternSvg(spec,'preview-pattern')}</defs>${shapes.map(d=>`<path d="${d}" fill="${fill}" stroke="${color.value}" stroke-width="2"/>`).join('')}</svg>`;
+ vector.innerHTML=currentSvg;ctx.clearRect(0,0,640,400);
+ for(const d of shapes){const shape=new Path2D(d);ctx.save();ctx.clip(shape);if(spec){drawFillPattern(ctx,style.value,color.value,640,400);}else{ctx.fillStyle=color.value;ctx.fill(shape);}ctx.restore();ctx.save();ctx.strokeStyle=color.value;ctx.lineWidth=2;ctx.stroke(shape);ctx.restore();}
+}
+style.addEventListener('change',render);color.addEventListener('input',render);
+document.querySelector('#download').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([currentSvg],{type:'image/svg+xml'}));const a=document.createElement('a');a.href=url;a.download=`choosemap-${style.value}.svg`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});render();
+</script></html>
